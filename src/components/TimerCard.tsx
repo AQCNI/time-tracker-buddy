@@ -1,5 +1,5 @@
 import { TimerEntry } from "@/types/timer";
-import { Play, Square, Pin, PinOff, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { Play, Square, Pin, PinOff, Trash2, ChevronDown, ChevronUp, RotateCcw, Plus, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -12,6 +12,8 @@ interface TimerCardProps {
   onRemove: () => void;
   onToggleFixed: () => void;
   onUpdate: (name: string, description: string) => void;
+  onReset: () => void;
+  onAdjust: (deltaMs: number) => void;
 }
 
 function formatTime(ms: number) {
@@ -33,6 +35,8 @@ export function TimerCard({
   onRemove,
   onToggleFixed,
   onUpdate,
+  onReset,
+  onAdjust,
 }: TimerCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -117,6 +121,33 @@ export function TimerCard({
 
         {/* Actions */}
         <div className="flex items-center gap-1">
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            onClick={() => onAdjust(-600000)}
+            title="-10 minutes"
+          >
+            <Minus className="h-4 w-4" />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            onClick={() => onAdjust(600000)}
+            title="+10 minutes"
+          >
+            <Plus className="h-4 w-4" />
+          </Button>
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            onClick={onReset}
+            title="Reset timer to 0"
+          >
+            <RotateCcw className="h-4 w-4" />
+          </Button>
           <Button
             size="icon"
             variant="ghost"
