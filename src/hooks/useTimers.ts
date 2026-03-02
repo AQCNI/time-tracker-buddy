@@ -112,6 +112,37 @@ export function useTimers() {
     );
   }, []);
 
+  const resetTimer = useCallback((id: string) => {
+    const now = Date.now();
+    setTimers((prev) =>
+      prev.map((t) => {
+        if (t.id === id) {
+          return { ...t, elapsedMs: 0, lastStartedAt: t.isRunning ? now : null };
+        }
+        return t;
+      })
+    );
+  }, []);
+
+  const adjustTimer = useCallback((id: string, deltaMs: number) => {
+    setTimers((prev) =>
+      prev.map((t) => {
+        if (t.id === id) {
+          const currentElapsed = t.isRunning && t.lastStartedAt
+            ? t.elapsedMs + (Date.now() - t.lastStartedAt)
+            : t.elapsedMs;
+          const newElapsed = Math.max(0, currentElapsed + deltaMs);
+          return {
+            ...t,
+            elapsedMs: newElapsed,
+            lastStartedAt: t.isRunning ? Date.now() : t.lastStartedAt,
+          };
+        }
+        return t;
+      })
+    );
+  }, []);
+
   const toggleFixed = useCallback((id: string) => {
     setTimers((prev) =>
       prev.map((t) => (t.id === id ? { ...t, isFixed: !t.isFixed } : t))
@@ -158,6 +189,8 @@ export function useTimers() {
     startTimer,
     stopTimer,
     stopAllTimers,
+    resetTimer,
+    adjustTimer,
     toggleFixed,
     updateTimer,
     getElapsed,

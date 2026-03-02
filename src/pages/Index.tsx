@@ -14,6 +14,8 @@ const Index = () => {
     startTimer,
     stopTimer,
     stopAllTimers,
+    resetTimer,
+    adjustTimer,
     toggleFixed,
     updateTimer,
     getElapsed,
@@ -105,6 +107,8 @@ const Index = () => {
                 onRemove={() => removeTimer(timer.id)}
                 onToggleFixed={() => toggleFixed(timer.id)}
                 onUpdate={(name, desc) => updateTimer(timer.id, name, desc)}
+                onReset={() => resetTimer(timer.id)}
+                onAdjust={(delta) => adjustTimer(timer.id, delta)}
               />
             ))}
           </div>
