@@ -55,6 +55,41 @@ export function TimerCard({
         timer.isFixed && "ring-1 ring-fixed/40"
       )}
     >
+      {/* Timer Name - Full Width at Top */}
+      {editing ? (
+        <input
+          className="bg-secondary rounded px-3 py-2 text-sm text-foreground w-full outline-none focus:ring-1 focus:ring-primary mb-3"
+          value={editName}
+          onChange={(e) => setEditName(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleSave()}
+          autoFocus
+        />
+      ) : (
+        <h3
+          className="text-base font-semibold cursor-pointer hover:text-primary transition-colors mb-3"
+          onClick={() => {
+            setEditName(timer.name);
+            setEditDesc(timer.description);
+            setEditing(true);
+          }}
+        >
+          {timer.name}
+        </h3>
+      )}
+
+      {/* Status Indicators */}
+      {!editing && (
+        <div className="flex gap-2 mb-3">
+          {timer.isRunning && (
+            <span className="text-xs text-success animate-pulse-glow">● Running</span>
+          )}
+          {timer.isFixed && !timer.isRunning && (
+            <span className="text-xs text-fixed">📌 Fixed</span>
+          )}
+        </div>
+      )}
+
+      {/* Main Controls */}
       <div className="flex items-center gap-3">
         {/* Play/Stop */}
         <Button
@@ -71,41 +106,14 @@ export function TimerCard({
           {timer.isRunning ? <Square className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
         </Button>
 
-        {/* Name & Time */}
-        <div className="flex-1 min-w-0">
-          {editing ? (
-            <input
-              className="bg-secondary rounded px-2 py-1 text-sm text-foreground w-full outline-none focus:ring-1 focus:ring-primary"
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSave()}
-              autoFocus
-            />
-          ) : (
-            <h3
-              className="text-sm font-medium truncate cursor-pointer hover:text-primary transition-colors"
-              onClick={() => {
-                setEditName(timer.name);
-                setEditDesc(timer.description);
-                setEditing(true);
-              }}
-            >
-              {timer.name}
-            </h3>
-          )}
-          {timer.isRunning && (
-            <span className="text-xs text-success animate-pulse-glow">● Running</span>
-          )}
-          {timer.isFixed && !timer.isRunning && (
-            <span className="text-xs text-fixed">📌 Fixed</span>
-          )}
-        </div>
-
         {/* Timer Display */}
         <div className="font-mono text-xl font-semibold tabular-nums tracking-wider text-foreground">
           {time.display}
           <span className="text-xs text-muted-foreground">.{time.centis}</span>
         </div>
+
+        {/* Spacer */}
+        <div className="flex-1" />
 
         {/* Actions */}
         <div className="flex items-center gap-1">

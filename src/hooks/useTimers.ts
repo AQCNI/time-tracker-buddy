@@ -52,13 +52,20 @@ export function useTimers() {
 
   const startTimer = useCallback((id: string) => {
     const now = Date.now();
-    setTimers((prev) =>
-      prev.map((t) => {
+    setTimers((prev) => {
+      const timerBeingStarted = prev.find((t) => t.id === id);
+      const isStartedTimerFixed = timerBeingStarted?.isFixed ?? false;
+
+      return prev.map((t) => {
         if (t.id === id) {
+          // only the requested timer is started
           return { ...t, isRunning: true, lastStartedAt: now };
         }
-        // Stop non-fixed running timers
-        if (t.isRunning && !t.isFixed) {
+        // if the timer we’re starting is **not fixed**, stop any other
+        // **non‑fixed** running timers.
+        // – fixed timers never stop anything
+        // – non‑fixed timers never stop fixed ones
+        if (!isStartedTimerFixed && t.isRunning && !t.isFixed) {
           return {
             ...t,
             isRunning: false,
@@ -67,8 +74,8 @@ export function useTimers() {
           };
         }
         return t;
-      })
-    );
+      });
+    });
   }, []);
 
   const stopTimer = useCallback((id: string) => {
