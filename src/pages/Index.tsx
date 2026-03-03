@@ -4,7 +4,16 @@ import { AddTimerDialog } from "@/components/AddTimerDialog";
 import { Button } from "@/components/ui/button";
 import { StopCircle, ClipboardCopy, Timer, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   DndContext,
   closestCenter,
@@ -39,8 +48,15 @@ const Index = () => {
     exportToClipboard,
   } = useTimers();
   const { toast } = useToast();
+  const [showClearDialog, setShowClearDialog] = useState(false);
 
   const hasRunning = timers.some((t) => t.isRunning);
+
+  const handleClearAllConfirmed = () => {
+    clearAllTimers();
+    setShowClearDialog(false);
+    toast({ title: "Cleared", description: "All timers have been deleted." });
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -61,11 +77,6 @@ const Index = () => {
     navigator.clipboard.writeText(data).then(() => {
       toast({ title: "Exported!", description: "All timer data copied to clipboard." });
     });
-  };
-
-  const handleClearAll = () => {
-    clearAllTimers();
-    toast({ title: "Cleared", description: "All timers have been deleted." });
   };
 
   // Keyboard shortcut: Ctrl+Shift+S to stop all
@@ -103,7 +114,7 @@ const Index = () => {
             )}
             {timers.length > 0 && (
               <>
-                <Button variant="outline" size="sm" className="gap-2" onClick={handleClearAll}>
+                <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowClearDialog(true)}>
                   <Trash2 className="h-4 w-4" />
                   Delete All
                 </Button>
@@ -162,6 +173,23 @@ const Index = () => {
           </div>
         )}
       </main>
+
+      <AlertDialog open={showClearDialog} onOpenChange={setShowClearDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete all timers?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. All timers will be permanently deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex justify-end gap-2">
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleClearAllConfirmed} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete All
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
