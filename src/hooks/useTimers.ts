@@ -95,6 +95,19 @@ export function useTimers() {
     );
   }, []);
 
+  const clearAllTimers = useCallback(() => {
+    setTimers([]);
+  }, []);
+
+  const reorderTimers = useCallback((fromIndex: number, toIndex: number) => {
+    setTimers((prev) => {
+      const updated = [...prev];
+      const [moved] = updated.splice(fromIndex, 1);
+      updated.splice(toIndex, 0, moved);
+      return updated;
+    });
+  }, []);
+
   const stopAllTimers = useCallback(() => {
     const now = Date.now();
     setTimers((prev) =>
@@ -186,6 +199,8 @@ export function useTimers() {
     timers,
     addTimer,
     removeTimer,
+    clearAllTimers,
+    reorderTimers,
     startTimer,
     stopTimer,
     stopAllTimers,

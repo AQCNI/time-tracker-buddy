@@ -2,15 +2,32 @@ import { useTimers } from "@/hooks/useTimers";
 import { TimerCard } from "@/components/TimerCard";
 import { AddTimerDialog } from "@/components/AddTimerDialog";
 import { Button } from "@/components/ui/button";
-import { StopCircle, ClipboardCopy, Timer } from "lucide-react";
+import { StopCircle, ClipboardCopy, Timer, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { SortableTimerCard } from "@/components/SortableTimerCard";
 
 const Index = () => {
   const {
     timers,
     addTimer,
     removeTimer,
+    clearAllTimers,
+    reorderTimers,
     startTimer,
     stopTimer,
     stopAllTimers,
@@ -25,6 +42,20 @@ const Index = () => {
 
   const hasRunning = timers.some((t) => t.isRunning);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = timers.findIndex((t) => t.id === active.id);
+      const newIndex = timers.findIndex((t) => t.id === over.id);
+      reorderTimers(oldIndex, newIndex);
+    }
+  };
+
   const handleExport = () => {
     const data = exportToClipboard();
     navigator.clipboard.writeText(data).then(() => {
@@ -32,13 +63,17 @@ const Index = () => {
     });
   };
 
-  // Keyboard shortcut: Ctrl+Shift+T to focus window (works for tab restore)
+  const handleClearAll = () => {
+    clearAllTimers();
+    toast({ title: "Cleared", description: "All timers have been deleted." });
+  };
+
+  // Keyboard shortcut: Ctrl+Shift+S to stop all
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.shiftKey && e.key === "T") {
         window.focus();
       }
-      // Ctrl+Shift+S to stop all
       if (e.ctrlKey && e.shiftKey && e.key === "S") {
         e.preventDefault();
         stopAllTimers();
@@ -61,21 +96,22 @@ const Index = () => {
           </div>
           <div className="flex items-center gap-2">
             {hasRunning && (
-              <Button
-                variant="destructive"
-                size="sm"
-                className="gap-2"
-                onClick={stopAllTimers}
-              >
+              <Button variant="destructive" size="sm" className="gap-2" onClick={stopAllTimers}>
                 <StopCircle className="h-4 w-4" />
                 Stop All
               </Button>
             )}
             {timers.length > 0 && (
-              <Button variant="outline" size="sm" className="gap-2" onClick={handleExport}>
-                <ClipboardCopy className="h-4 w-4" />
-                Export
-              </Button>
+              <>
+                <Button variant="outline" size="sm" className="gap-2" onClick={handleClearAll}>
+                  <Trash2 className="h-4 w-4" />
+                  Delete All
+                </Button>
+                <Button variant="outline" size="sm" className="gap-2" onClick={handleExport}>
+                  <ClipboardCopy className="h-4 w-4" />
+                  Export
+                </Button>
+              </>
             )}
             <AddTimerDialog onAdd={addTimer} />
           </div>
@@ -96,25 +132,28 @@ const Index = () => {
             <AddTimerDialog onAdd={addTimer} />
           </div>
         ) : (
-          <div className="space-y-3">
-            {timers.map((timer) => (
-              <TimerCard
-                key={timer.id}
-                timer={timer}
-                elapsed={getElapsed(timer)}
-                onStart={() => startTimer(timer.id)}
-                onStop={() => stopTimer(timer.id)}
-                onRemove={() => removeTimer(timer.id)}
-                onToggleFixed={() => toggleFixed(timer.id)}
-                onUpdate={(name, desc) => updateTimer(timer.id, name, desc)}
-                onReset={() => resetTimer(timer.id)}
-                onAdjust={(delta) => adjustTimer(timer.id, delta)}
-              />
-            ))}
-          </div>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={timers.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+              <div className="space-y-3">
+                {timers.map((timer) => (
+                  <SortableTimerCard
+                    key={timer.id}
+                    timer={timer}
+                    elapsed={getElapsed(timer)}
+                    onStart={() => startTimer(timer.id)}
+                    onStop={() => stopTimer(timer.id)}
+                    onRemove={() => removeTimer(timer.id)}
+                    onToggleFixed={() => toggleFixed(timer.id)}
+                    onUpdate={(name, desc) => updateTimer(timer.id, name, desc)}
+                    onReset={() => resetTimer(timer.id)}
+                    onAdjust={(delta) => adjustTimer(timer.id, delta)}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         )}
 
-        {/* Keyboard shortcuts hint */}
         {timers.length > 0 && (
           <div className="mt-8 text-center text-xs text-muted-foreground">
             <span className="bg-secondary px-2 py-1 rounded">Ctrl+Shift+S</span> Stop all timers
